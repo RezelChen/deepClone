@@ -1,37 +1,29 @@
-//aStack, bStack为内部递归时调用，以应付遇obj1这种情况，
-//var obj1={t1:"ying",};obj1.self=obj1;
-var deepClone = function(obj, aStack, bStack) {
-	//不是对象，数组，则直接返回
-	if (typeof obj !== 'object') return obj;
+const deepClone = (obj, stack = []) => {
+	// if not object or array, return directly
+	if (typeof obj !== 'object') return obj
 
-	//深度优先算法
-	aStack = aStack || [];
-	bStack = bStack || [];
-	
-	// 查看是否出现自引用
-	var length = aStack.length;
-	while (length--) {
-		if (aStack[length] === obj) return bStack[length];
+	// check to see if obj has been pushed to stack
+	for (let i = 0; i < stack.length; i++) {
+		const item = stack[i]
+		if (item.origin === obj) { return item.copy }
 	}
 
-	var isArray = _.isArray(obj);
-	var result = isArray ? [] : {};
-	aStack.push(obj);		// 存储指向obj的指针
-	bStack.push(result);	// 存储深复制obj的对象
+	const isArray = Array.isArray(obj)
+	const result = isArray ? [] : {}
+
+	stack.push({ origin: obj, copy: result })
 
 	if (isArray) {
-		var length = obj.length;
-		while (length--) {
-			result[length] = deepClone(obj[length], aStack, bStack);
-		}
-    } else {
-		var keys = _.keys(obj);
-		for (var i = 0, len = keys.length; i < len; i++) {
-			result[keys[i]] = deepClone(obj[keys[i]], aStack, bStack);
-		}
-    }
+		obj.forEach((item, i) => {
+			result[i] = deepClone(item, stack)
+		})
+	} else {
+		const keys = Object.keys(obj)
+		keys.forEach((key) => {
+			result[key] = deepClone(obj[key], stack)
+		})
+	}
 
-	aStack.pop();
-	bStack.pop();
-	return result;
+	stack.pop()
+	return result
 }
